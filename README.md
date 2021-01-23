@@ -1,8 +1,12 @@
 # Background
 
-Transfer any jobcoins deposited to a specific deposit address into a larger pool of jobcoins ("the house")
-which are then distributed at random intervals to preferred destination address(es). This effectively disassociates
-original jobcoins from the owner.
+Jobcoin transactions are pseudonymous - meaning they don't directly reveal the identities of the sender/receiver.
+However, these identities can still be revealed with some analysis of the publicly available transaction ledger.
+
+A mixer solution is one way to solve the privacy issue presented here. This jobcoin mixer moves any jobcoins deposited
+to a deposit address into a larger "house" address where it is mixed with other jobcoins. Then the mixer distributes the
+jobcoins in smaller discrete amounts, over a period of time, to a set of final destination addresses. This effectively
+disassociates original jobcoins from the owner.
 
 ### Run
 
@@ -10,7 +14,7 @@ original jobcoins from the owner.
 
 *note: the user can mix for multiple deposit addresses while this CLI is up and running*
 
-*note: if logs are too verbose, just change `<root level="INFO">` to `<root level="ERROR">` in logback.xml*
+*note: if logs are too verbose, adjust levels in logback.xml*
 
 ### Test
 
@@ -30,13 +34,13 @@ destination address is also randomized.
 
 I chose to implement a solution to this problem with akka-typed for a couple reasons:
 
-1. Easier to design and implement. Akka actors make concurrency simple by creating the illusion everything
-   is single-threaded. Less stressing about accessing/protecting state is good.
+1. Easier to design and implement. Akka actors make concurrency simple by creating the illusion everything is
+   single-threaded. Less stressing about accessing/protecting state is good.
 2. In turn, scaling out this solution is simple. An actor is its own light-weight thread. I could conceptually spawn
    thousands of Sentinel actors on decent hardware. Asynchronous, non-blocking, and performant? Check check check.
 3. If this service turned out to be a real money maker in production, I'd want some functionality for halting ongoing
-   mix operations. Futures can't be cancelled so that was out of the equation. Akka looked good. Using ZIO or
-   cats effect seems viable as well though.
+   mix operations. Futures are difficult to cancel so that was out of the equation. Akka can do this easily. Using ZIO
+   or cats effect seems viable as well though.
 
 # ToDo
 
@@ -44,14 +48,12 @@ Speaking of time, if I had more of it I'd do the following:
 
 - unit tests for actor commands, client methods, and the main class as well
 - time window should a user parameter that gets exposed in the CLI
-- actually randomizing the deposit amounts to be spread out over the destination addresses - that would make the mixing
-  utterly untrackable.
+- actually randomizing the deposit amounts to be spread out over the destination addresses
 - for fees, take a small percentage off the top before moving from the house to destination addresses
 - more robust exception handling
-
-- resilience features: this is a multi-step process with money on the line and if any of it fails along the way, things
-  get hairy. It would be good to keep track of state somewhere else in case of catastrophe so that the service can
-  recover and resume the operation.
+- dark mode with no logging
+- resilience: mixing is a multi-step process with money on the line. If any step fails along the way, there should a way
+  to recover and resume the operation.
 
 
 
